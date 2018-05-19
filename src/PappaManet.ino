@@ -1,8 +1,8 @@
 #include <FastLED.h>
 #include <Particle.h>
 #include "hlpFunc.h"
-
-#define debug 1
+#include "LEDcontrol.h"
+#define debug 1  //set to 1 for debug prints
 
 FASTLED_USING_NAMESPACE;
 SYSTEM_MODE(SEMI_AUTOMATIC)
@@ -31,7 +31,13 @@ const uint32_t msGetWeather = 60000*30; //Period for retrieving weather data (30
 bool getData = true;
 Timer getDataTimer(msGetWeather, toggleGetData);
 weatherDataS weatherData;
-//==================================================================================
+mappedDataS LedControlData;
+//------------------------------------------------------------------------------
+//======================= LEDS =================================================
+CRGB leds[NUM_LEDS];
+CRGBPalette16 currentPalette;
+TBlendType    currentBlending;
+//-------------------------------------------------------------------------------
 //===================================================================================
 
 
@@ -67,9 +73,11 @@ void toggleGetData(){         //set flag to send request for new data
 void weatherResponse(const char *event, const char *weatherDataStr){    //response handler
     weatherDataParser parsedData(weatherDataStr);
     weatherData = parsedData.Data();
+    dataToLedConverter mappedData(weatherData);
+    LedControlData = mappedData.Data();
     dataReceived = true;
 }
-//==================================================================
+//---------------------------------------------------------------------
 //==============================================================================
 
 
@@ -78,10 +86,10 @@ void weatherResponse(const char *event, const char *weatherDataStr){    //respon
 //=======================================================================
 void setup() {
 
-//#if debug==1
+#if debug==1
 Serial.begin(9600);
 Serial.println("Starting....");
-//#endif
+#endif
 //==================General setups===============
     Particle.subscribe("hook-response/weather", weatherResponse, MY_DEVICES);
 //==============================================
@@ -89,19 +97,31 @@ Serial.println("Starting....");
 //================= Connection setup =========================
     Particle.connect();
     if (!waitFor(Particle.connected, msRetryTime)) { WiFi.off();  }
+    else{
+      Particle.publish("weather", PRIVATE);
+    }
 // =============================================================
-    Particle.publish("weather", PRIVATE);
+
+#if debug==1
     Serial.println("Running....");
+#endif
+
+FastLED.addLeds<LED_TYPE, LED_PIN>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
 }
 
 void loop() {
-//#if debug==1
+#if debug==1
   if(dataReceived){
+    Serial.println("parsed data:");
     Serial.println(weatherData.weatherID);
     Serial.println(weatherData.temp);
     Serial.println(weatherData.wind);
+    Serial.println("mapped data:");
+    Serial.println(LedControlData.type);
+    Serial.println(LedControlData.temp);
+    Serial.println(LedControlData.wind);
   }
-//#endif
+#endif
 //=========== Connection retry ====================
     if (!retryRunning && !Particle.connected())
     { // if we have not already scheduled a retry and are not connected
