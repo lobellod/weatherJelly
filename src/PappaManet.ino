@@ -8,11 +8,6 @@ FASTLED_USING_NAMESPACE;
 SYSTEM_MODE(SEMI_AUTOMATIC)
 SYSTEM_THREAD(ENABLED)
 
-
-// Vejbystrand API ID 2663432
-// API key 192e4b612a74f2afdc2d3d5e199856e9
-// api call: api.openweathermap.org/data/2.5/weather?appid=192e4b612a74f2afdc2d3d5e199856e9&id=2663432&units=metric
-String testdata = "800~18.97~4.1~";
 //==================== VARIABLES & DECLARATIONS =======================================
 bool dataReceived = false;
 
@@ -35,7 +30,8 @@ mappedDataS LedControlData;
 //------------------------------------------------------------------------------
 //======================= LEDS =================================================
 CRGB leds[NUM_LEDS];
-CRGBPalette16 currentPalette;
+CRGBPalette16 tempPalette;
+CRGBPalette16 windPalette;
 TBlendType    currentBlending;
 //-------------------------------------------------------------------------------
 //===================================================================================
@@ -87,11 +83,12 @@ void weatherResponse(const char *event, const char *weatherDataStr){    //respon
 void setup() {
 
 #if debug==1
-Serial.begin(9600);
-Serial.println("Starting....");
+  Serial.begin(9600);
+  Serial.println("Starting....");
 #endif
 //==================General setups===============
     Particle.subscribe("hook-response/weather", weatherResponse, MY_DEVICES);
+    getDataTimer.start();
 //==============================================
 
 //================= Connection setup =========================
@@ -103,7 +100,7 @@ Serial.println("Starting....");
 // =============================================================
 
 #if debug==1
-    Serial.println("Running....");
+  Serial.println("Running....");
 #endif
 
 FastLED.addLeds<LED_TYPE, LED_PIN>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
@@ -136,6 +133,14 @@ void loop() {
         if(getData){
             Particle.publish("weather", PRIVATE);
             getData = false;
+            getDataTimer.reset();
+        }
+        if(dataReceived){
+          temperaturePalette Palette(LedControlData.temp);
+          tempPalette = Palette.getPalette();
+          ledEffects setupLedEffects(&leds[0],tempPalette, LedControlData);
+          setupLedEffects.windShiftLeds();
+          FastLED.show();
         }
     }
 //-----------------------------------------------
