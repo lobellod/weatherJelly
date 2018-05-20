@@ -26,13 +26,13 @@ class ledEffects{
     CRGB* leds_p;
     CRGBPalette16 currentPalette;
     mappedDataS currentData;
-
+    sunTimesS sunTime;
     int mins = 35;
     int max = 107;
     int chanceOfDrops = 0;
     CRGB dropColor = CRGB::White;
   public:
-    ledEffects(CRGB*, CRGBPalette16, mappedDataS);
+    ledEffects(CRGB*, CRGBPalette16, mappedDataS, sunTimesS);
     void windShiftLeds();
     void snowRainEffects();
 };

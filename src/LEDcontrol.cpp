@@ -4,10 +4,10 @@ FASTLED_USING_NAMESPACE;
 
 DEFINE_GRADIENT_PALETTE( temperature_heatmap ) {
 0,     0,  0,  255,   //Blue
-50,     72,  61,  255,   //Dark Slate Blue
-100,   25,  25,  212,   //Midnight Blue
-140,   0,139,  180,   //Dark Cyan
-180,   200,128,  148, //light Coral
+50,     25,  61,  255,   //Dark Slate Blue
+90,   25,  110,  212,   //Midnight Blue
+120,   0,139,  180,   //Dark Cyan
+180,   200, 128,  148, //light Coral
 255,   255,92,92 }; //Indian Red
 
 CRGBPalette16 temperaturePalette::temperaturePalette_static = temperature_heatmap;
@@ -19,13 +19,14 @@ temperaturePalette::temperaturePalette(uint8_t temp){
   CRGB color2  = ColorFromPalette(temperaturePalette_static, colorIndexHigh,200 , NOBLEND);
   CRGB black  = CRGB(0,0,80);//CRGB::Black;
   basicPalette = CRGBPalette16(
-                                color1,   color2,  color1, color2,
+                                color1,   color1,  color2, color2,
                                 color1, color2, color1,  black,
-                                color2,  color1,  color2,  color1,
+                                color2,  color2,  color1,  color1,
                                 color2, color1, color2,  black );
   }
 
-ledEffects::ledEffects(CRGB* ledArray, CRGBPalette16 palette, mappedDataS data){
+ledEffects::ledEffects(CRGB* ledArray, CRGBPalette16 palette, mappedDataS data, sunTimesS sunData){
+  sunTime = sunData;
   leds_p = ledArray;
   currentPalette = palette;
   currentData = data;

@@ -15,8 +15,8 @@ weatherDataParser::weatherDataParser(const char *data){
 
 dataToLedConverter::dataToLedConverter(weatherDataS dataStruct){
   mappedData.type = weatherIDconverter(dataStruct.weatherID);
-  int loc_temp = dataStruct.temp;
-  int loc_wind = dataStruct.wind;
+  uint8_t loc_temp = dataStruct.temp;
+  uint8_t loc_wind = dataStruct.wind;
   if(dataStruct.temp<-10){
     loc_temp=-10;
   }

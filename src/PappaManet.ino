@@ -23,7 +23,7 @@ Timer stopTimer(msRetryTime, stopConnect);     // timer to stop a long running t
 String weatherDataStr = String(100); //Strin for unparsed weather data
 
 const uint32_t msGetWeather = 60000*30; //Period for retrieving weather data (30mins)
-bool getData = true;
+bool getData = false;
 Timer getDataTimer(msGetWeather, toggleGetData);
 weatherDataS weatherData;
 mappedDataS LedControlData;
@@ -85,6 +85,8 @@ void weatherResponse(const char *event, const char *weatherDataStr){    //respon
     weatherData = parsedData.Data();
     dataToLedConverter mappedData(weatherData);
     LedControlData = mappedData.Data();
+    temperaturePalette Palette(LedControlData.temp);
+    tempPalette = Palette.getPalette();
     resetTimeKeeper();
     dataReceived = true;
 }
@@ -111,17 +113,13 @@ void setup() {
     Particle.connect();
     if (!waitFor(Particle.connected, msRetryTime)) { WiFi.off();  }
     else{
-      //Particle.publish("weather", PRIVATE);
+      Particle.publish("weather", PRIVATE);
     }
 // =============================================================
 
-#if debug==1
-  Serial.println("Running....");
-#endif
+
 delay(10000);
 //============================ LED Setup ===================================
-temperaturePalette Palette(LedControlData.temp);
-tempPalette = Palette.getPalette();
 FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
 fill_solid( leds, NUM_LEDS, CRGB::Red);
 FastLED.show();
@@ -147,6 +145,8 @@ void loop() {
     weatherData.wind = 5;
     dataToLedConverter mappedData(weatherData);
     LedControlData = mappedData.Data();
+    temperaturePalette Palette(LedControlData.temp);
+    tempPalette = Palette.getPalette();
     Serial.println("mapped data:");
     Serial.println(LedControlData.type);
     Serial.println(LedControlData.temp);
@@ -171,7 +171,7 @@ void loop() {
         }
         if(dataReceived){
           sunTime = mappedData.timeForSunUpdate(tSec);
-          ledEffects setupLedEffects(&leds[0],tempPalette, LedControlData);
+          ledEffects setupLedEffects(&leds[0],tempPalette, LedControlData, sunTime);
           setupLedEffects.windShiftLeds();
           FastLED.show();
         }
