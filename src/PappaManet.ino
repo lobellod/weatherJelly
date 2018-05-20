@@ -28,6 +28,9 @@ Timer getDataTimer(msGetWeather, toggleGetData);
 weatherDataS weatherData;
 mappedDataS LedControlData;
 sunTimesS sunTime;
+
+weatherDataParser parsedData;
+dataToLedConverter mappedData;
 //======================= Timekeeping =================================================
 int tSec = 0;
 const uint32_t msSecond = 1000;
@@ -38,6 +41,8 @@ CRGB leds[NUM_LEDS];
 CRGBPalette16 tempPalette;
 CRGBPalette16 windPalette;
 TBlendType    currentBlending;
+ledEffects ledEffect;
+temperaturePalette temperaturePalette;
 //-------------------------------------------------------------------------------
 //===================================================================================
 
@@ -81,12 +86,10 @@ void toggleGetData(){         //set flag to send request for new data
     getData = true;
 }
 void weatherResponse(const char *event, const char *weatherDataStr){    //response handler
-    weatherDataParser parsedData(weatherDataStr);
-    weatherData = parsedData.Data();
-    dataToLedConverter mappedData(weatherData);
-    LedControlData = mappedData.Data();
-    temperaturePalette Palette(LedControlData.temp);
-    tempPalette = Palette.getPalette();
+    weatherData = parsedData.parseData(weatherDataStr);
+    LedControlData = mappedData.getLedConverterData(weatherData);
+    tempPalette = temperaturePalette.getPalette(LedControlData.temp);
+    ledEffect.setupLedEffects(&leds[0],tempPalette, LedControlData);
     resetTimeKeeper();
     dataReceived = true;
 }
@@ -117,12 +120,25 @@ void setup() {
     }
 // =============================================================
 
+#if debug==2
+    Serial.begin(9600);
+    weatherData.weatherID = 800;
+    weatherData.temp = 30;
+    weatherData.wind = 5;
+    LedControlData = mappedData.getLedConverterData(weatherData);
+    tempPalette = temperaturePalette.getPalette(LedControlData.temp);
+    Serial.println("mapped data:");
+    Serial.println(LedControlData.type);
+    Serial.println(LedControlData.temp);
+    Serial.println(LedControlData.wind);
 
-delay(10000);
+#endif
+delay(3000);
 //============================ LED Setup ===================================
 FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
 fill_solid( leds, NUM_LEDS, CRGB::Red);
 FastLED.show();
+delay(3000);
 //=========================================================================
 }
 
@@ -139,20 +155,7 @@ void loop() {
     Serial.println(LedControlData.wind);
   }
 #endif
-#if debug==2
-    weatherData.weatherID = 800;
-    weatherData.temp = 30;
-    weatherData.wind = 5;
-    dataToLedConverter mappedData(weatherData);
-    LedControlData = mappedData.Data();
-    temperaturePalette Palette(LedControlData.temp);
-    tempPalette = Palette.getPalette();
-    Serial.println("mapped data:");
-    Serial.println(LedControlData.type);
-    Serial.println(LedControlData.temp);
-    Serial.println(LedControlData.wind);
 
-#endif
 //=========== Connection retry ====================
     if (!retryRunning && !Particle.connected())
     { // if we have not already scheduled a retry and are not connected
@@ -171,8 +174,7 @@ void loop() {
         }
         if(dataReceived){
           sunTime = mappedData.timeForSunUpdate(tSec);
-          ledEffects setupLedEffects(&leds[0],tempPalette, LedControlData, sunTime);
-          setupLedEffects.windShiftLeds();
+          ledEffect.windShiftLeds();
           FastLED.show();
         }
     }

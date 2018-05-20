@@ -29,8 +29,7 @@ class weatherDataParser{
     weatherDataS weatherData;
     char strBuffer[100] = "";
   public:
-    weatherDataParser(const char*);
-    weatherDataS Data(){return weatherData;}
+    weatherDataS parseData(const char *data);
 };
 
 class dataToLedConverter{
@@ -47,9 +46,8 @@ class dataToLedConverter{
     int otherIDs[10]={701,711,721,731,741,751,761,762,771,781};
     int clearishIDs[5]={800,801,802,803,804};
   public:
-    dataToLedConverter(weatherDataS);
     sunTimesS timeForSunUpdate(int);
-    mappedDataS Data(){return mappedData;}
+    mappedDataS getLedConverterData(weatherDataS);
   private:
     int weatherIDconverter(int);
 };

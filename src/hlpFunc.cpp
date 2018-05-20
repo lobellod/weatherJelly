@@ -1,7 +1,7 @@
 #include <Particle.h>
 #include "hlpFunc.h"
 
-weatherDataParser::weatherDataParser(const char *data){
+weatherDataS weatherDataParser::parseData(const char *data){
   receivedData=String(data);
   receivedData.toCharArray(strBuffer,100);
   weatherData.weatherID = atoi(strtok(strBuffer,"\"~"));
@@ -11,9 +11,10 @@ weatherDataParser::weatherDataParser(const char *data){
   weatherData.currentTime = atoi(strtok(NULL, "~"));
   weatherData.sunrise = atoi(strtok(NULL, "~"));
   weatherData.sunset = atoi(strtok(NULL, "~"));
+  return weatherData;
 }
 
-dataToLedConverter::dataToLedConverter(weatherDataS dataStruct){
+mappedDataS dataToLedConverter::getLedConverterData(weatherDataS dataStruct){
   mappedData.type = weatherIDconverter(dataStruct.weatherID);
   uint8_t loc_temp = dataStruct.temp;
   uint8_t loc_wind = dataStruct.wind;
@@ -28,6 +29,7 @@ dataToLedConverter::dataToLedConverter(weatherDataS dataStruct){
   }
   mappedData.temp=map(loc_temp, -10, 30, 0, 255);
   mappedData.wind=map(loc_wind, 0, 15, 0, 255);
+  return mappedData;
 }
 
 int dataToLedConverter::weatherIDconverter(int weatherID){

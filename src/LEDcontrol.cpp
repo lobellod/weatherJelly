@@ -12,7 +12,7 @@ DEFINE_GRADIENT_PALETTE( temperature_heatmap ) {
 
 CRGBPalette16 temperaturePalette::temperaturePalette_static = temperature_heatmap;
 
-temperaturePalette::temperaturePalette(uint8_t temp){
+CRGBPalette16 temperaturePalette::getPalette(uint8_t temp){
   uint8_t  colorIndexLow = temp/4;
   uint8_t  colorIndexHigh = temp;
   CRGB color1 = ColorFromPalette(temperaturePalette_static, colorIndexLow, 200, NOBLEND);
@@ -23,10 +23,10 @@ temperaturePalette::temperaturePalette(uint8_t temp){
                                 color1, color2, color1,  black,
                                 color2,  color2,  color1,  color1,
                                 color2, color1, color2,  black );
+  return basicPalette;
   }
 
-ledEffects::ledEffects(CRGB* ledArray, CRGBPalette16 palette, mappedDataS data, sunTimesS sunData){
-  sunTime = sunData;
+void ledEffects::setupLedEffects(CRGB* ledArray, CRGBPalette16 palette, mappedDataS data){
   leds_p = ledArray;
   currentPalette = palette;
   currentData = data;

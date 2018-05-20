@@ -18,8 +18,7 @@ class temperaturePalette{
     CRGBPalette16 basicPalette;
     uint8_t temp;
   public:
-    temperaturePalette(uint8_t);
-    CRGBPalette16 getPalette(){return basicPalette;}
+    CRGBPalette16 getPalette(uint8_t);
 };
 
 class ledEffects{
@@ -32,7 +31,7 @@ class ledEffects{
     int chanceOfDrops = 0;
     CRGB dropColor = CRGB::White;
   public:
-    ledEffects(CRGB*, CRGBPalette16, mappedDataS, sunTimesS);
+    void setupLedEffects(CRGB*, CRGBPalette16, mappedDataS);
     void windShiftLeds();
     void snowRainEffects();
 };
