@@ -3,18 +3,22 @@
 
 weatherDataParser::weatherDataParser(const char *data){
   receivedData=String(data);
-  receivedData.toCharArray(strBuffer,50);
+  receivedData.toCharArray(strBuffer,100);
   weatherData.weatherID = atoi(strtok(strBuffer,"\"~"));
   weatherData.temp = atoi(strtok(NULL, "~"));
   weatherData.wind = atoi(strtok(NULL, "~"));
+  weatherData.clouds = atoi(strtok(NULL, "~"));
+  weatherData.currentTime = atoi(strtok(NULL, "~"));
+  weatherData.sunrise = atoi(strtok(NULL, "~"));
+  weatherData.sunset = atoi(strtok(NULL, "~"));
 }
 
 dataToLedConverter::dataToLedConverter(weatherDataS dataStruct){
   mappedData.type = weatherIDconverter(dataStruct.weatherID);
   int loc_temp = dataStruct.temp;
   int loc_wind = dataStruct.wind;
-  if(dataStruct.temp<-5){
-    loc_temp=-5;
+  if(dataStruct.temp<-10){
+    loc_temp=-10;
   }
   else if(dataStruct.temp>30){
     loc_temp = 30;
@@ -22,7 +26,7 @@ dataToLedConverter::dataToLedConverter(weatherDataS dataStruct){
   if(dataStruct.wind>15){
     loc_wind = 15;
   }
-  mappedData.temp=map(loc_temp, -5, 30, 0, 255);
+  mappedData.temp=map(loc_temp, -10, 30, 0, 255);
   mappedData.wind=map(loc_wind, 0, 15, 0, 255);
 }
 
@@ -78,4 +82,11 @@ int dataToLedConverter::weatherIDconverter(int weatherID){
   }
   type = 9; //Unknown weatherID
   return type;
+}
+
+sunTimesS dataToLedConverter::timeForSunUpdate(int timeData){
+  timeAge = timeData;
+  sunData.timeToRise = unMappedData.sunrise - (unMappedData.currentTime + timeAge);
+  sunData.timeToSet = unMappedData.sunset - (unMappedData.currentTime + timeAge);
+  return sunData;
 }

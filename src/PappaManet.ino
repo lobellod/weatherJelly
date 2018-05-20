@@ -2,7 +2,7 @@
 #include <Particle.h>
 #include "hlpFunc.h"
 #include "LEDcontrol.h"
-#define debug 1  //set to 1 for debug prints
+#define debug 2  //set to 1 for debug prints
 
 FASTLED_USING_NAMESPACE;
 SYSTEM_MODE(SEMI_AUTOMATIC)
@@ -20,14 +20,19 @@ Timer retryTimer(msRetryDelay, retryConnect);  // timer to retry connecting
 Timer stopTimer(msRetryTime, stopConnect);     // timer to stop a long running try
 //------------------------------------------------------------------
 //======================== Data Retrieving ===================================
-String weatherDataStr = String(20); //Strin for unparsed weather data
+String weatherDataStr = String(100); //Strin for unparsed weather data
 
 const uint32_t msGetWeather = 60000*30; //Period for retrieving weather data (30mins)
 bool getData = true;
 Timer getDataTimer(msGetWeather, toggleGetData);
 weatherDataS weatherData;
 mappedDataS LedControlData;
-//------------------------------------------------------------------------------
+sunTimesS sunTime;
+//======================= Timekeeping =================================================
+int tSec = 0;
+const uint32_t msSecond = 1000;
+Timer secondTimer(msSecond, timeKeeper);
+//-------------------------------------------------------------------------------
 //======================= LEDS =================================================
 CRGB leds[NUM_LEDS];
 CRGBPalette16 tempPalette;
@@ -62,6 +67,15 @@ void stopConnect()
     stopTimer.stop();
 }
 //------------------------------------------------------------------
+//===================== TimeKeeping ===========================
+void timeKeeper(){
+  tSec = tSec+1;
+}
+void resetTimeKeeper(){
+  tSec = 0;
+  secondTimer.reset();
+}
+//---------------------------------------------------------------------
 //===================== Data Retrieving ===========================
 void toggleGetData(){         //set flag to send request for new data
     getData = true;
@@ -71,6 +85,7 @@ void weatherResponse(const char *event, const char *weatherDataStr){    //respon
     weatherData = parsedData.Data();
     dataToLedConverter mappedData(weatherData);
     LedControlData = mappedData.Data();
+    resetTimeKeeper();
     dataReceived = true;
 }
 //---------------------------------------------------------------------
@@ -89,21 +104,28 @@ void setup() {
 //==================General setups===============
     Particle.subscribe("hook-response/weather", weatherResponse, MY_DEVICES);
     getDataTimer.start();
+    secondTimer.start();
 //==============================================
 
 //================= Connection setup =========================
     Particle.connect();
     if (!waitFor(Particle.connected, msRetryTime)) { WiFi.off();  }
     else{
-      Particle.publish("weather", PRIVATE);
+      //Particle.publish("weather", PRIVATE);
     }
 // =============================================================
 
 #if debug==1
   Serial.println("Running....");
 #endif
-
-FastLED.addLeds<LED_TYPE, LED_PIN>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+delay(10000);
+//============================ LED Setup ===================================
+temperaturePalette Palette(LedControlData.temp);
+tempPalette = Palette.getPalette();
+FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+fill_solid( leds, NUM_LEDS, CRGB::Red);
+FastLED.show();
+//=========================================================================
 }
 
 void loop() {
@@ -118,6 +140,18 @@ void loop() {
     Serial.println(LedControlData.temp);
     Serial.println(LedControlData.wind);
   }
+#endif
+#if debug==2
+    weatherData.weatherID = 800;
+    weatherData.temp = 30;
+    weatherData.wind = 5;
+    dataToLedConverter mappedData(weatherData);
+    LedControlData = mappedData.Data();
+    Serial.println("mapped data:");
+    Serial.println(LedControlData.type);
+    Serial.println(LedControlData.temp);
+    Serial.println(LedControlData.wind);
+
 #endif
 //=========== Connection retry ====================
     if (!retryRunning && !Particle.connected())
@@ -136,8 +170,7 @@ void loop() {
             getDataTimer.reset();
         }
         if(dataReceived){
-          temperaturePalette Palette(LedControlData.temp);
-          tempPalette = Palette.getPalette();
+          sunTime = mappedData.timeForSunUpdate(tSec);
           ledEffects setupLedEffects(&leds[0],tempPalette, LedControlData);
           setupLedEffects.windShiftLeds();
           FastLED.show();

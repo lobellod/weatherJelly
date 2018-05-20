@@ -7,6 +7,15 @@ struct weatherDataS{
   int weatherID;
   int temp;
   int wind;
+  int clouds;
+  int currentTime;
+  int sunrise;
+  int sunset;
+};
+
+struct sunTimesS{
+  int timeToRise;
+  int timeToSet;
 };
 
 struct mappedDataS{
@@ -18,7 +27,7 @@ struct mappedDataS{
 class weatherDataParser{
     String receivedData;
     weatherDataS weatherData;
-    char strBuffer[50] = "";
+    char strBuffer[100] = "";
   public:
     weatherDataParser(const char*);
     weatherDataS Data(){return weatherData;}
@@ -27,6 +36,8 @@ class weatherDataParser{
 class dataToLedConverter{
     weatherDataS unMappedData;
     mappedDataS mappedData;
+    sunTimesS sunData;
+    int timeAge;
     int thunderStormIDs[10]={200,201,202,210,211,212,221,230,231,232};
     int lightRainIDs[9]={300,301,302,310,311,500,501,511,520};
     int heavyRainIDs[10]={312,323,314,321,502,503,504,521,522,531};
@@ -37,10 +48,10 @@ class dataToLedConverter{
     int clearishIDs[5]={800,801,802,803,804};
   public:
     dataToLedConverter(weatherDataS);
+    sunTimesS timeForSunUpdate(int);
     mappedDataS Data(){return mappedData;}
   private:
     int weatherIDconverter(int);
 };
-
 
 #endif
