@@ -2,7 +2,7 @@
 #include <Particle.h>
 #include "hlpFunc.h"
 #include "LEDcontrol.h"
-#define debug 2  //set to 1 for debug prints
+#define debug 2  //set to 1 for debug prints; 2 for custom string; 0 for normal
 
 FASTLED_USING_NAMESPACE;
 SYSTEM_MODE(SEMI_AUTOMATIC)
@@ -40,9 +40,10 @@ Timer secondTimer(msSecond, timeKeeper);
 CRGB leds[NUM_LEDS];
 CRGBPalette16 tempPalette;
 CRGBPalette16 windPalette;
+CRGBPalette16 sunPalette;
 TBlendType    currentBlending;
-ledEffects ledEffect;
-temperaturePalette temperaturePalette;
+ledEffects ledEffect(&leds[0]);
+paletteClass palettes;
 //-------------------------------------------------------------------------------
 //===================================================================================
 
@@ -87,9 +88,10 @@ void toggleGetData(){         //set flag to send request for new data
 }
 void weatherResponse(const char *event, const char *weatherDataStr){    //response handler
     weatherData = parsedData.parseData(weatherDataStr);
-    LedControlData = mappedData.getLedConverterData(weatherData);
-    tempPalette = temperaturePalette.getPalette(LedControlData.temp);
-    ledEffect.setupLedEffects(&leds[0],tempPalette, LedControlData);
+    mappedData.setLedConverterData(weatherData);
+    LedControlData = mappedData.getData();
+    tempPalette = palettes.getTempPalette(LedControlData.temp);
+    ledEffect.setData(tempPalette, LedControlData);
     resetTimeKeeper();
     dataReceived = true;
 }
@@ -116,21 +118,27 @@ void setup() {
     Particle.connect();
     if (!waitFor(Particle.connected, msRetryTime)) { WiFi.off();  }
     else{
+      #if debug <2
       Particle.publish("weather", PRIVATE);
+      #endif
     }
 // =============================================================
 
 #if debug==2
     Serial.begin(9600);
-    weatherData.weatherID = 800;
-    weatherData.temp = 30;
-    weatherData.wind = 5;
-    LedControlData = mappedData.getLedConverterData(weatherData);
-    tempPalette = temperaturePalette.getPalette(LedControlData.temp);
+    String testDataStr = String(100);
+    //"weatherID ~ temp ~ wind ~ clouds ~ currentTime ~sunrise ~sunset"
+    testDataStr = "804~19.66~4.6~90~1527420000~1527388461~1527449936~";
+    weatherResponse("debug_event", testDataStr);
     Serial.println("mapped data:");
     Serial.println(LedControlData.type);
     Serial.println(LedControlData.temp);
     Serial.println(LedControlData.wind);
+    Serial.println("Other Data:");
+    Serial.print("SKYLEDSTART: ");
+    Serial.println(SKYLEDSTART);
+    Serial.print("SKYLEDEND: ");
+    Serial.println(SKYLEDEND);
 
 #endif
 delay(3000);
@@ -168,12 +176,25 @@ void loop() {
 //=============== CONNECTED =====================
     if(Particle.connected()){
         if(getData){
+          #if debug < 2
             Particle.publish("weather", PRIVATE);
+          #endif
+          #if debug == 2
+            String testDataStr = String(100);
+            //"weatherID ~ temp ~ wind ~ clouds ~ currentTime ~sunrise ~sunset"
+            testDataStr = "804~19.66~4.6~90~1527420000~1527388461~1527449936~";
+            weatherResponse("debug_event", testDataStr);
+          #endif
             getData = false;
             getDataTimer.reset();
         }
         if(dataReceived){
-          sunTime = mappedData.timeForSunUpdate(tSec);
+          mappedData.timeForSunUpdate(tSec);
+
+          LedControlData = mappedData.getData();
+          sunPalette = palettes.getSunPalette(LedControlData.sunTime.timeToRise,LedControlData.sunTime.timeToSet);
+
+          ledEffect.sunEffects(sunPalette, LedControlData);
           ledEffect.windShiftLeds();
           FastLED.show();
         }

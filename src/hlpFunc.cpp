@@ -14,8 +14,10 @@ weatherDataS weatherDataParser::parseData(const char *data){
   return weatherData;
 }
 
-mappedDataS dataToLedConverter::getLedConverterData(weatherDataS dataStruct){
+void dataToLedConverter::setLedConverterData(weatherDataS dataStruct){
+  unMappedData=dataStruct;
   mappedData.type = weatherIDconverter(dataStruct.weatherID);
+  timeForSunUpdate(dataStruct.currentTime);
   uint8_t loc_temp = dataStruct.temp;
   uint8_t loc_wind = dataStruct.wind;
   if(dataStruct.temp<-10){
@@ -29,7 +31,7 @@ mappedDataS dataToLedConverter::getLedConverterData(weatherDataS dataStruct){
   }
   mappedData.temp=map(loc_temp, -10, 30, 0, 255);
   mappedData.wind=map(loc_wind, 0, 15, 0, 255);
-  return mappedData;
+  //return mappedData;
 }
 
 int dataToLedConverter::weatherIDconverter(int weatherID){
@@ -86,9 +88,8 @@ int dataToLedConverter::weatherIDconverter(int weatherID){
   return type;
 }
 
-sunTimesS dataToLedConverter::timeForSunUpdate(int timeData){
-  timeAge = timeData;
-  sunData.timeToRise = unMappedData.sunrise - (unMappedData.currentTime + timeAge);
-  sunData.timeToSet = unMappedData.sunset - (unMappedData.currentTime + timeAge);
-  return sunData;
+void dataToLedConverter::timeForSunUpdate(int timeAge){
+  mappedData.sunTime.timeNow = (unMappedData.currentTime + timeAge);
+  mappedData.sunTime.timeToRise = unMappedData.sunrise - mappedData.sunTime.timeNow;
+  mappedData.sunTime.timeToSet = unMappedData.sunset - mappedData.sunTime.timeNow;
 }

@@ -16,12 +16,14 @@ struct weatherDataS{
 struct sunTimesS{
   int timeToRise;
   int timeToSet;
+  int timeNow;
 };
 
 struct mappedDataS{
   uint8_t type;
   uint8_t temp;
   uint8_t wind;
+  struct sunTimesS sunTime;
 };
 
 class weatherDataParser{
@@ -35,8 +37,8 @@ class weatherDataParser{
 class dataToLedConverter{
     weatherDataS unMappedData;
     mappedDataS mappedData;
-    sunTimesS sunData;
-    int timeAge;
+    //sunTimesS sunData;
+    //int timeAge;
     int thunderStormIDs[10]={200,201,202,210,211,212,221,230,231,232};
     int lightRainIDs[9]={300,301,302,310,311,500,501,511,520};
     int heavyRainIDs[10]={312,323,314,321,502,503,504,521,522,531};
@@ -46,8 +48,9 @@ class dataToLedConverter{
     int otherIDs[10]={701,711,721,731,741,751,761,762,771,781};
     int clearishIDs[5]={800,801,802,803,804};
   public:
-    sunTimesS timeForSunUpdate(int);
-    mappedDataS getLedConverterData(weatherDataS);
+    void timeForSunUpdate(int);
+    void setLedConverterData(weatherDataS);
+    mappedDataS getData() {return mappedData;}
   private:
     int weatherIDconverter(int);
 };

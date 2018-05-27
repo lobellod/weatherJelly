@@ -4,36 +4,41 @@ FASTLED_USING_NAMESPACE;
 #ifndef LEDCONTROL_INCLUDED
 #define LEDCONTROL_INCLUDED
 
-#define LED_PIN     2
+#define LED_PIN     1
 #define NUM_LEDS    144
 #define BRIGHTNESS  200
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
 #define UPDATES_PER_SECOND  100
+#define SKYWIDTH    48
+#define SKYLEDSTART (NUM_LEDS/2 - SKYWIDTH/2)
+#define SKYLEDEND   (NUM_LEDS/2 + SKYWIDTH/2)
 
 
-
-class temperaturePalette{
+class paletteClass{
     static CRGBPalette16 temperaturePalette_static;
-    CRGBPalette16 basicPalette;
+    static CRGBPalette16 sunColorPalette_static;
+    CRGBPalette16 tempPalette;
+    CRGBPalette16 sunPalette;
     uint8_t temp;
   public:
-    CRGBPalette16 getPalette(uint8_t);
+    CRGBPalette16 getTempPalette(uint8_t);
+    CRGBPalette16 getSunPalette(int, int);
 };
 
 class ledEffects{
-    CRGB* leds_p;
-    CRGBPalette16 currentPalette;
+    CRGB *leds_p;
+    CRGBPalette16 currentTempPalette;
+    CRGBPalette16 currentSunPalette;
     mappedDataS currentData;
-    sunTimesS sunTime;
-    int mins = 35;
-    int max = 107;
     int chanceOfDrops = 0;
     CRGB dropColor = CRGB::White;
   public:
-    void setupLedEffects(CRGB*, CRGBPalette16, mappedDataS);
+    ledEffects(CRGB*);
+    void setData(CRGBPalette16, mappedDataS);
     void windShiftLeds();
     void snowRainEffects();
+    void sunEffects(CRGBPalette16, mappedDataS);
 };
 
 #endif
