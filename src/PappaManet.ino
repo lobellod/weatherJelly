@@ -2,7 +2,9 @@
 #include <Particle.h>
 #include "hlpFunc.h"
 #include "LEDcontrol.h"
-#define debug 2  //set to 1 for debug prints; 2 for custom string; 0 for normal
+
+#define DEBUG 2  //set to 1 for debug prints; 2 for custom string; undefine for normal
+#include "debug.h"
 
 FASTLED_USING_NAMESPACE;
 SYSTEM_MODE(SEMI_AUTOMATIC)
@@ -104,10 +106,9 @@ void weatherResponse(const char *event, const char *weatherDataStr){    //respon
 //=======================================================================
 void setup() {
 
-#if debug==1
-  Serial.begin(9600);
-  Serial.println("Starting....");
-#endif
+  DEBUG_BEGIN(9600);
+  DEBUG_PRINTLN("Starting....");
+
 //==================General setups===============
     Particle.subscribe("hook-response/weather", weatherResponse, MY_DEVICES);
     getDataTimer.start();
@@ -124,21 +125,20 @@ void setup() {
     }
 // =============================================================
 
-#if debug==2
-    Serial.begin(9600);
+#if DEBUG==2
     String testDataStr = String(100);
     //"weatherID ~ temp ~ wind ~ clouds ~ currentTime ~sunrise ~sunset"
     testDataStr = "804~19.66~4.6~90~1527420000~1527388461~1527449936~";
     weatherResponse("debug_event", testDataStr);
-    Serial.println("mapped data:");
-    Serial.println(LedControlData.type);
-    Serial.println(LedControlData.temp);
-    Serial.println(LedControlData.wind);
-    Serial.println("Other Data:");
-    Serial.print("SKYLEDSTART: ");
-    Serial.println(SKYLEDSTART);
-    Serial.print("SKYLEDEND: ");
-    Serial.println(SKYLEDEND);
+    DEBUG_PRINTLN("mapped data:");
+    DEBUG_PRINTLN(LedControlData.type);
+    DEBUG_PRINTLN(LedControlData.temp);
+    DEBUG_PRINTLN(LedControlData.wind);
+    DEBUG_PRINTLN("Other Data:");
+    DEBUG_PRINT("SKYLEDSTART: ");
+    DEBUG_PRINTLN(SKYLEDSTART);
+    DEBUG_PRINT("SKYLEDEND: ");
+    DEBUG_PRINTLN(SKYLEDEND);
 
 #endif
 delay(3000);
@@ -151,16 +151,16 @@ delay(3000);
 }
 
 void loop() {
-#if debug==1
+#if DEBUG==1
   if(dataReceived){
-    Serial.println("parsed data:");
-    Serial.println(weatherData.weatherID);
-    Serial.println(weatherData.temp);
-    Serial.println(weatherData.wind);
-    Serial.println("mapped data:");
-    Serial.println(LedControlData.type);
-    Serial.println(LedControlData.temp);
-    Serial.println(LedControlData.wind);
+    DEBUG_PRINTLN("parsed data:");
+    DEBUG_PRINTLN(weatherData.weatherID);
+    DEBUG_PRINTLN(weatherData.temp);
+    DEBUG_PRINTLN(weatherData.wind);
+    DEBUG_PRINTLN("mapped data:");
+    DEBUG_PRINTLN(LedControlData.type);
+    DEBUG_PRINTLN(LedControlData.temp);
+    DEBUG_PRINTLN(LedControlData.wind);
   }
 #endif
 
@@ -176,10 +176,10 @@ void loop() {
 //=============== CONNECTED =====================
     if(Particle.connected()){
         if(getData){
-          #if debug < 2
+          #if DEBUG < 2
             Particle.publish("weather", PRIVATE);
           #endif
-          #if debug == 2
+          #if DEBUG == 2
             String testDataStr = String(100);
             //"weatherID ~ temp ~ wind ~ clouds ~ currentTime ~sunrise ~sunset"
             testDataStr = "804~19.66~4.6~90~1527420000~1527388461~1527449936~";

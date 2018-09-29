@@ -2,6 +2,7 @@
 #include <FastLED.h>
 FASTLED_USING_NAMESPACE;
 
+//================= Basic Palette heatmap define===============================
 DEFINE_GRADIENT_PALETTE( temperature_heatmap ) {
 0,     0, 0, 255,   //Blue
 50,    25, 61, 255,   //Dark Slate Blue
@@ -17,7 +18,7 @@ DEFINE_GRADIENT_PALETTE( sunColor_heatmap ) {
 190,   255, 165, 0,   //Orange
 220,   255, 215, 0, //Gold
 255,   255, 255, 0 }; //Yellow
-
+//======================================================================
 
 CRGBPalette16 paletteClass::temperaturePalette_static = temperature_heatmap;
 CRGBPalette16 paletteClass::sunColorPalette_static = sunColor_heatmap;
@@ -128,6 +129,7 @@ void ledEffects::snowRainEffects(){
 void ledEffects::sunEffects(CRGBPalette16 palette, mappedDataS updatedSunData){
   currentData = updatedSunData;
   currentSunPalette = palette;
+  uint8_t index;
   int tempTime = updatedSunData.sunTime.timeNow;
   if(tempTime<updatedSunData.sunTime.timeToRise){
     tempTime = updatedSunData.sunTime.timeToRise;
@@ -135,7 +137,6 @@ void ledEffects::sunEffects(CRGBPalette16 palette, mappedDataS updatedSunData){
   if(tempTime>updatedSunData.sunTime.timeToSet){
     tempTime = updatedSunData.sunTime.timeToSet;
   }
-  uint8_t index = 100;
   index = map(tempTime,updatedSunData.sunTime.timeToRise,updatedSunData.sunTime.timeToSet,80,120);
   for (int i=SKYLEDSTART; i<SKYLEDEND;i++){
     leds_p[i] = ColorFromPalette( currentSunPalette, index, 200, LINEARBLEND);
