@@ -17,21 +17,52 @@ weatherDataS weatherDataParser::parseData(const char *data){
 void dataToLedConverter::setLedConverterData(weatherDataS dataStruct){
   unMappedData=dataStruct;
   mappedData.type = weatherIDconverter(dataStruct.weatherID);
+  mappedData.clouds = cloudConverter(dataStruct.clouds);
+  mappedData.temp = tempConverter(dataStruct.temp);
+  mappedData.wind = windConverter(dataStruct.wind);
   timeForSunUpdate(dataStruct.currentTime);
+
+/*To temperature function -------------
   uint8_t loc_temp = dataStruct.temp;
-  uint8_t loc_wind = dataStruct.wind;
   if(dataStruct.temp<-10){
     loc_temp=-10;
   }
   else if(dataStruct.temp>30){
     loc_temp = 30;
   }
+    mappedData.temp=map(loc_temp, -10, 30, 0, 255);
+  //-----------------
+  */
+
+  /* Moved to windConverter func -------------
+  uint8_t loc_wind = dataStruct.wind;
   if(dataStruct.wind>15){
     loc_wind = 15;
   }
-  mappedData.temp=map(loc_temp, -10, 30, 0, 255);
   mappedData.wind=map(loc_wind, 0, 15, 0, 255);
-  //return mappedData;
+  ---------------------------*/
+}
+
+uint8_t dataToLedConverter::windConverter(int windspeed){
+  uint8_t mappedWind;
+  /*if(windspeed>15){
+    windspeed = 15;
+  }*/
+  windspeed = constrain(windspeed, 0, 15);
+  mappedWind=map(windspeed, 0, 15, 0, 255);
+  return mappedWind;
+}
+uint8_t dataToLedConverter::tempConverter(int temperature){
+  uint8_t mappedTemperature;
+  /*if(temperature<-10){
+    temperature=-10;
+  }
+  else if(temperature>30){
+    temperature = 30;
+  }*/
+  temperature = constrain(temperature, -10, 30);
+  mappedTemperature=map(temperature, -10, 30, 0, 255);
+  return mappedTemperature;
 }
 
 int dataToLedConverter::weatherIDconverter(int weatherID){
@@ -93,4 +124,10 @@ void dataToLedConverter::timeForSunUpdate(int timeAge){
   mappedData.sunTime.timeNow = (unMappedData.currentTime + timeAge);
   mappedData.sunTime.timeToRise = unMappedData.sunrise - mappedData.sunTime.timeNow;
   mappedData.sunTime.timeToSet = unMappedData.sunset - mappedData.sunTime.timeNow;
+}
+
+uint8_t dataToLedConverter::cloudConverter(int cloudpercentage){
+  cloudpercentage = constrain(cloudpercentage, 0, 100);
+  uint8_t cloudConverted = map(cloudpercentage, 0, 100, 0 ,255);
+  return cloudConverted;
 }

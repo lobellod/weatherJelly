@@ -23,6 +23,7 @@ struct mappedDataS{
   uint8_t type;
   uint8_t temp;
   uint8_t wind;
+  uint8_t clouds;
   struct sunTimesS sunTime;
 };
 
@@ -53,6 +54,9 @@ class dataToLedConverter{
     mappedDataS getData() {return mappedData;}
   private:
     int weatherIDconverter(int);
+    uint8_t cloudConverter(int);
+    uint8_t tempConverter(int);
+    uint8_t windConverter(int);
 };
 
 #endif

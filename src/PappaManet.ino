@@ -3,7 +3,7 @@
 #include "hlpFunc.h"
 #include "LEDcontrol.h"
 
-#define DEBUG 2  //set to 1 for debug prints; 2 for custom string; undefine for normal
+
 #include "debug.h"
 
 FASTLED_USING_NAMESPACE;
@@ -43,6 +43,7 @@ CRGB leds[NUM_LEDS];
 CRGBPalette16 tempPalette;
 CRGBPalette16 windPalette;
 CRGBPalette16 sunPalette;
+skyPaletteS skyPaletteStruct;
 TBlendType    currentBlending;
 ledEffects ledEffect(&leds[0]);
 paletteClass palettes;
@@ -100,7 +101,6 @@ void weatherResponse(const char *event, const char *weatherDataStr){    //respon
 //---------------------------------------------------------------------
 //==============================================================================
 
-
 //=======================================================================
 //===================== MAIN PROGRAM ====================================
 //=======================================================================
@@ -114,12 +114,18 @@ void setup() {
     getDataTimer.start();
     secondTimer.start();
 //==============================================
+//================================LED SETUP================
+FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+fill_solid( leds, NUM_LEDS, CRGB::Red);
+FastLED.show();
+delay(1000);
+//=========================================================
 
 //================= Connection setup =========================
     Particle.connect();
     if (!waitFor(Particle.connected, msRetryTime)) { WiFi.off();  }
     else{
-      #if debug <2
+      #if DEBUG <2
       Particle.publish("weather", PRIVATE);
       #endif
     }
@@ -128,7 +134,7 @@ void setup() {
 #if DEBUG==2
     String testDataStr = String(100);
     //"weatherID ~ temp ~ wind ~ clouds ~ currentTime ~sunrise ~sunset"
-    testDataStr = "804~19.66~4.6~90~1527420000~1527388461~1527449936~";
+    testDataStr = "804~19.66~4.6~10~10010~10000~30000~";
     weatherResponse("debug_event", testDataStr);
     DEBUG_PRINTLN("mapped data:");
     DEBUG_PRINTLN(LedControlData.type);
@@ -142,11 +148,11 @@ void setup() {
 
 #endif
 delay(3000);
-//============================ LED Setup ===================================
-FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
-fill_solid( leds, NUM_LEDS, CRGB::Red);
+//============================ LED done ===================================
+
+fill_solid( leds, NUM_LEDS, CRGB::Blue);
 FastLED.show();
-delay(3000);
+delay(1000);
 //=========================================================================
 }
 
@@ -157,10 +163,14 @@ void loop() {
     DEBUG_PRINTLN(weatherData.weatherID);
     DEBUG_PRINTLN(weatherData.temp);
     DEBUG_PRINTLN(weatherData.wind);
+    DEBUG_PRINTLN(LedControlData.sunTime.timeNow);
+    DEBUG_PRINTLN(LedControlData.sunTime.timeToRise);
+    DEBUG_PRINTLN(LedControlData.sunTime.timeToSet);
     DEBUG_PRINTLN("mapped data:");
     DEBUG_PRINTLN(LedControlData.type);
     DEBUG_PRINTLN(LedControlData.temp);
     DEBUG_PRINTLN(LedControlData.wind);
+    delay(50);
   }
 #endif
 
@@ -182,7 +192,7 @@ void loop() {
           #if DEBUG == 2
             String testDataStr = String(100);
             //"weatherID ~ temp ~ wind ~ clouds ~ currentTime ~sunrise ~sunset"
-            testDataStr = "804~19.66~4.6~90~1527420000~1527388461~1527449936~";
+            //testDataStr = "804~19.66~4.6~90~25010~10000~30000~";
             weatherResponse("debug_event", testDataStr);
           #endif
             getData = false;
@@ -190,11 +200,10 @@ void loop() {
         }
         if(dataReceived){
           mappedData.timeForSunUpdate(tSec);
-
           LedControlData = mappedData.getData();
           sunPalette = palettes.getSunPalette(LedControlData.sunTime.timeToRise,LedControlData.sunTime.timeToSet);
-
-          ledEffect.sunEffects(sunPalette, LedControlData);
+          skyPaletteStruct = palettes.getSkyPalette();
+          ledEffect.SkyAndSunEffects(sunPalette, LedControlData, skyPaletteStruct);
           ledEffect.windShiftLeds();
           FastLED.show();
         }
