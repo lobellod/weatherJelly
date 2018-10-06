@@ -97,6 +97,9 @@ void paletteClass::setSkyBrightness(uint8_t brightness){
 
 ledEffects::ledEffects(CRGB* ledArray){
     leds_p = ledArray;
+    for(int i=0;i<SKYWIDTH;i++){
+      dropArray[i]=CRGB::Black;
+    }
 }
 
 void ledEffects::setData(CRGBPalette16 tempPalette, mappedDataS data){
@@ -121,33 +124,45 @@ void ledEffects::windShiftLeds(){
 void ledEffects::snowRainEffects(){
   if(currentData.type==2){
     //Light Rain
-    chanceOfDrops = 20;
-    dropColor = CRGB::LightBlue;
+    chanceOfDrops = 10;
+    dropColor = CRGB::Blue;
   }
   else if(currentData.type==3){
     //Heavy Rain
-    chanceOfDrops = 50;
-    dropColor = CRGB::LightBlue;
+    chanceOfDrops = 30;
+    dropColor = CRGB::Blue;
   }
   else if(currentData.type==4){
     //Rain & Snow
-    chanceOfDrops = 40;
-    if(random8(0,2)==0){dropColor = CRGB::LightBlue;}
+    chanceOfDrops = 20;
+    if(random8(0,2)==0){dropColor = CRGB::Blue;}
     else{dropColor = CRGB::White;}
   }
   else if(currentData.type==5){
     //light Snow
-    chanceOfDrops = 20;
+    chanceOfDrops = 10;
     dropColor = CRGB::White;
   }
   else if(currentData.type==6){
     //Heavy Snow
-    chanceOfDrops = 50;
+    chanceOfDrops = 30;
     dropColor = CRGB::White;
   }
 
   if( random8(200) < chanceOfDrops) {
-    leds_p[ random16(SKYLEDSTART,SKYLEDEND) ] += dropColor;
+    dropArray[random16(0,SKYWIDTH) ] += dropColor;
+  }
+  snowRainFade();
+}
+
+void ledEffects::snowRainFade(){
+  EVERY_N_MILLISECONDS(10){
+    for(int i=0; i<SKYWIDTH;i++){
+      dropArray[i].fadeToBlackBy(15);
+    }
+  }
+  for (int i=SKYLEDSTART; i<SKYLEDEND; i++){
+    leds_p[i] += dropArray[i-SKYLEDSTART];
   }
 }
 

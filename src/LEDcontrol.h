@@ -48,12 +48,15 @@ class ledEffects{
     mappedDataS currentData;
     int chanceOfDrops = 0;
     CRGB dropColor = CRGB::White;
+    CRGB dropArray[SKYWIDTH];
   public:
     ledEffects(CRGB*);
     void setData(CRGBPalette16, mappedDataS);
     void windShiftLeds();
     void snowRainEffects();
     void SkyAndSunEffects(CRGBPalette16, mappedDataS, skyPaletteS);
+  private:
+    void snowRainFade();
 };
 
 #endif

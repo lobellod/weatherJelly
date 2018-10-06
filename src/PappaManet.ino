@@ -133,7 +133,7 @@ delay(1000);
 #if DEBUG==2
     String testDataStr = String(100);
     //"weatherID ~ temp ~ wind ~ clouds ~ currentTime ~sunrise ~sunset"
-    testDataStr = "200~12~3.6~76~1538736909~1538716909~1538757073~";
+    testDataStr = "300~12~3.6~76~1538736909~1538716909~1538757073~";
     weatherResponse("debug_event", testDataStr);
     DEBUG_PRINTLN("mapped data:");
     DEBUG_PRINTLN(LedControlData.type);
