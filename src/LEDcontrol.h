@@ -13,25 +13,28 @@ FASTLED_USING_NAMESPACE;
 #define SKYWIDTH    48
 #define SKYLEDSTART (NUM_LEDS/2 - SKYWIDTH/2)
 #define SKYLEDEND   (NUM_LEDS/2 + SKYWIDTH/2)
-#define MAX_SKY_BRIGHTNESS 40
+#define MAX_SKY_BRIGHTNESS 35
+
+
 
 struct skyPaletteS{
   uint8_t brightness;
   CRGBPalette16 palette;
 };
+extern uint8_t globalBrightness;
+void setGlobalBrightness(uint8_t);
 
 class paletteClass{
     static CRGBPalette16 temperaturePalette_static;
     static CRGBPalette16 sunColorPalette_static;
     skyPaletteS skyPalette;
-    //skyPalette.palette = cloudAndSky_heatmap;
     CRGBPalette16 tempPalette;
     CRGBPalette16 sunPalette;
+    CRGBPalette16 sunAndSkyPalette;
     uint8_t temp;
   public:
-    //paletteClass(void);
     CRGBPalette16 getTempPalette(uint8_t);
-    CRGBPalette16 getSunPalette(int, int);
+    CRGBPalette16 getSunAndSkyPalette(int, int, uint8_t);
     skyPaletteS getSkyPalette(){return skyPalette;};
   private:
     void setSkyBrightness(uint8_t);

@@ -1,6 +1,5 @@
 #include "LEDcontrol.h"
 #include <FastLED.h>
-
 #include "debug.h"
 FASTLED_USING_NAMESPACE;
 
@@ -23,20 +22,17 @@ DEFINE_GRADIENT_PALETTE( sunColor_heatmap ) {
 
 DEFINE_GRADIENT_PALETTE( cloudAndSky_heatmap) {
   0,   0, 0, 237,
-  255, 169, 169, 169};
+  150, 173, 216, 230,
+  255,  200, 200, 200};
 
 //======================================================================
+uint8_t globalBrightness = 0;
+void setGlobalBrightness(uint8_t brightness){
+  globalBrightness = constrain(brightness,100,250);
+}
 
 CRGBPalette16 paletteClass::temperaturePalette_static = temperature_heatmap;
 CRGBPalette16 paletteClass::sunColorPalette_static = sunColor_heatmap;
-//CRGBPalette16 paletteClass::skyPalette::palette = cloudAndSky_heatmap;
-
-
-/*paletteClass::paletteClass(void){
-  skyPalette.palette = cloudAndSky_heatmap;
-  temperaturePalette_static = temperature_heatmap;
-  sunColorPalette_static = sunColor_heatmap;
-}*/
 
 CRGBPalette16 paletteClass::getTempPalette(uint8_t temp){
   uint8_t  colorIndexLow = temp/4;
@@ -52,22 +48,22 @@ CRGBPalette16 paletteClass::getTempPalette(uint8_t temp){
   return tempPalette;
 }
 
-CRGBPalette16 paletteClass::getSunPalette(int timeToRise, int timeToSet){
-  uint8_t colorIndexLow;
-  uint8_t colorIndexHigh;
-  uint8_t sunBrightness;
-  uint8_t skyBrightness;
+CRGBPalette16 paletteClass::getSunAndSkyPalette(int timeToRise, int timeToSet, uint8_t cloudCoverage){
+  uint8_t colorIndexLow = 0;
+  uint8_t colorIndexHigh = 0;
+  uint8_t sunBrightness = 0;
+  uint8_t skyBrightness = 5;
   if(timeToRise<1800 && timeToRise>-1800){
-    colorIndexLow = map(timeToRise, -1800, 1800, 210, 0);
+    colorIndexLow = map(timeToRise, -1800, 1800, 180, 0);
     colorIndexHigh = colorIndexLow+40;
     sunBrightness = map(constrain(timeToRise,0,1800), 0, 1800, 200, 0);
-    skyBrightness = map(constrain(timeToRise,-1800,0), -1800, 0, MAX_SKY_BRIGHTNESS, 0);
+    skyBrightness = map(constrain(timeToRise,-1800,0), -1800, 0, MAX_SKY_BRIGHTNESS, 5);
   }
   else if(timeToSet<1800 && timeToSet>-1800){
-    colorIndexLow = map(timeToSet, -1800, 1800, 0, 210);
+    colorIndexLow = map(timeToSet, -1800, 1800, 0, 180);
     colorIndexHigh = colorIndexLow+40;
     sunBrightness = map(constrain(timeToSet,-1800,0), -1800, 0, 0, 200);
-    skyBrightness = map(constrain(timeToSet,0,1800), 0, 1800, 0, MAX_SKY_BRIGHTNESS);
+    skyBrightness = map(constrain(timeToSet,0,1800), 0, 1800, 5, MAX_SKY_BRIGHTNESS);
   }
   else if(timeToRise<-1800 && timeToSet>1800){
     colorIndexHigh = 250;
@@ -75,20 +71,23 @@ CRGBPalette16 paletteClass::getSunPalette(int timeToRise, int timeToSet){
     sunBrightness = 200;
     skyBrightness = MAX_SKY_BRIGHTNESS;
   }
-  else{
-    sunBrightness = 0;
-    skyBrightness = 0;
-  }
-  CRGB color1 = ColorFromPalette(sunColorPalette_static, colorIndexLow, sunBrightness/4, NOBLEND);
-  CRGB color2  = ColorFromPalette(sunColorPalette_static, colorIndexHigh, sunBrightness , NOBLEND);
-  CRGB black  = CRGB::Black;
-  sunPalette = CRGBPalette16(
-                                black, black, black, black,
-                                black, black, black, black,
-                                color1, color2, color1, black,
-                                black, black, black, black);
   setSkyBrightness(skyBrightness);
-  return sunPalette;
+  setGlobalBrightness(sunBrightness);
+
+  CRGB sunEdgeColor = ColorFromPalette(sunColorPalette_static, colorIndexLow, sunBrightness/4, NOBLEND);
+  CRGB sunColor  = ColorFromPalette(sunColorPalette_static, colorIndexHigh, sunBrightness , NOBLEND);
+  CRGB skyColor = ColorFromPalette(skyPalette.palette,cloudCoverage, skyPalette.brightness, NOBLEND);
+  /*if(!sunEdgeColor){
+    sunEdgeColor = skyColor;
+    sunColor = skyColor;
+  }*/
+  sunAndSkyPalette = CRGBPalette16(
+                                skyColor, skyColor, skyColor, skyColor,
+                                skyColor, skyColor, skyColor, skyColor,
+                                sunEdgeColor, sunColor, sunEdgeColor, skyColor,
+                                skyColor, skyColor, skyColor, skyColor);
+
+  return sunAndSkyPalette;
 }
 
 void paletteClass::setSkyBrightness(uint8_t brightness){
@@ -109,12 +108,12 @@ void ledEffects::windShiftLeds(){
   uint8_t colorIndex = beatsin8((currentData.wind/14),0,120);
   uint8_t tempIndex = colorIndex;
   for( int i = (SKYLEDSTART-1); i >= 0; i--) {
-    leds_p[i] = ColorFromPalette( currentTempPalette, tempIndex, 200, LINEARBLEND);
+    leds_p[i] = ColorFromPalette( currentTempPalette, tempIndex, globalBrightness, LINEARBLEND);
     tempIndex++;
   }
   tempIndex = colorIndex;
   for(int j = SKYLEDEND; j < NUM_LEDS; j++) {
-    leds_p[j] = ColorFromPalette( currentTempPalette, tempIndex, 200, LINEARBLEND);
+    leds_p[j] = ColorFromPalette( currentTempPalette, tempIndex, globalBrightness, LINEARBLEND);
     tempIndex++;
   }
 }
@@ -147,7 +146,7 @@ void ledEffects::snowRainEffects(){
     dropColor = CRGB::White;
   }
 
-  if( random8() < chanceOfDrops) {
+  if( random8(200) < chanceOfDrops) {
     leds_p[ random16(SKYLEDSTART,SKYLEDEND) ] += dropColor;
   }
 }
@@ -160,33 +159,12 @@ void ledEffects::SkyAndSunEffects(CRGBPalette16 palette, mappedDataS updatedSunD
   int tempTime = updatedSunData.sunTime.timeNow;
   int sunriseTime = updatedSunData.sunTime.timeToRise+tempTime;
   int sunsetTime = updatedSunData.sunTime.timeToSet+tempTime;
-  /*if(tempTime<sunriseTime){
-    tempTime = sunriseTime;
-  }
-  if(tempTime>sunsetTime){
-    tempTime = sunsetTime;
-  }*/
   tempTime = constrain(tempTime, sunriseTime, sunsetTime);
   index = map(tempTime,sunriseTime,sunsetTime,160,48);
 
-  DEBUG_PRINT("sunrise time:  ");
-  DEBUG_PRINTLN(sunriseTime);
-  DEBUG_PRINT("sunset time:  ");
-  DEBUG_PRINTLN(sunsetTime);
-  DEBUG_PRINT("index:  ");
-  DEBUG_PRINTLN(index);
-
-  for (int i=SKYLEDSTART; i<SKYLEDEND;i++){
-    leds_p[i] = ColorFromPalette( currentSunPalette, index, 200, NOBLEND);
+  for (int i=SKYLEDSTART; i<SKYLEDEND; i++){
+    leds_p[i] = ColorFromPalette( currentSunPalette, index, 255, LINEARBLEND);
     index=index+2;
-    if(!leds_p[i]){
-      leds_p[i] = ColorFromPalette( skyColorsS.palette, currentData.clouds, skyColorsS.brightness, LINEARBLEND);
-    }
   }
-  /*for (int i=SKYLEDSTART; i<SKYLEDEND;i++){
-    if(!leds_p[i]){
-      leds_p[i] = ColorFromPalette( skyColors.palette, currentData.clouds, skyColors.brightness, LINEARBLEND);
-    }
-  }*/
 
 }

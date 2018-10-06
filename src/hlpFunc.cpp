@@ -21,45 +21,16 @@ void dataToLedConverter::setLedConverterData(weatherDataS dataStruct){
   mappedData.temp = tempConverter(dataStruct.temp);
   mappedData.wind = windConverter(dataStruct.wind);
   timeForSunUpdate(dataStruct.currentTime);
-
-/*To temperature function -------------
-  uint8_t loc_temp = dataStruct.temp;
-  if(dataStruct.temp<-10){
-    loc_temp=-10;
-  }
-  else if(dataStruct.temp>30){
-    loc_temp = 30;
-  }
-    mappedData.temp=map(loc_temp, -10, 30, 0, 255);
-  //-----------------
-  */
-
-  /* Moved to windConverter func -------------
-  uint8_t loc_wind = dataStruct.wind;
-  if(dataStruct.wind>15){
-    loc_wind = 15;
-  }
-  mappedData.wind=map(loc_wind, 0, 15, 0, 255);
-  ---------------------------*/
 }
 
 uint8_t dataToLedConverter::windConverter(int windspeed){
   uint8_t mappedWind;
-  /*if(windspeed>15){
-    windspeed = 15;
-  }*/
   windspeed = constrain(windspeed, 0, 15);
   mappedWind=map(windspeed, 0, 15, 0, 255);
   return mappedWind;
 }
 uint8_t dataToLedConverter::tempConverter(int temperature){
   uint8_t mappedTemperature;
-  /*if(temperature<-10){
-    temperature=-10;
-  }
-  else if(temperature>30){
-    temperature = 30;
-  }*/
   temperature = constrain(temperature, -10, 30);
   mappedTemperature=map(temperature, -10, 30, 0, 255);
   return mappedTemperature;

@@ -3,7 +3,6 @@
 #include "hlpFunc.h"
 #include "LEDcontrol.h"
 
-
 #include "debug.h"
 
 FASTLED_USING_NAMESPACE;
@@ -134,7 +133,7 @@ delay(1000);
 #if DEBUG==2
     String testDataStr = String(100);
     //"weatherID ~ temp ~ wind ~ clouds ~ currentTime ~sunrise ~sunset"
-    testDataStr = "804~19.66~4.6~10~10010~10000~30000~";
+    testDataStr = "200~12~3.6~76~1538736909~1538716909~1538757073~";
     weatherResponse("debug_event", testDataStr);
     DEBUG_PRINTLN("mapped data:");
     DEBUG_PRINTLN(LedControlData.type);
@@ -147,7 +146,6 @@ delay(1000);
     DEBUG_PRINTLN(SKYLEDEND);
 
 #endif
-delay(3000);
 //============================ LED done ===================================
 
 fill_solid( leds, NUM_LEDS, CRGB::Blue);
@@ -201,10 +199,11 @@ void loop() {
         if(dataReceived){
           mappedData.timeForSunUpdate(tSec);
           LedControlData = mappedData.getData();
-          sunPalette = palettes.getSunPalette(LedControlData.sunTime.timeToRise,LedControlData.sunTime.timeToSet);
+          sunPalette = palettes.getSunAndSkyPalette(LedControlData.sunTime.timeToRise,LedControlData.sunTime.timeToSet, LedControlData.clouds);
           skyPaletteStruct = palettes.getSkyPalette();
           ledEffect.SkyAndSunEffects(sunPalette, LedControlData, skyPaletteStruct);
           ledEffect.windShiftLeds();
+          ledEffect.snowRainEffects();
           FastLED.show();
         }
     }
