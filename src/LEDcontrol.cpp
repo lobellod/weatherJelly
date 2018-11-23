@@ -56,13 +56,13 @@ CRGBPalette16 paletteClass::getSunAndSkyPalette(int timeToRise, int timeToSet, u
   if(timeToRise<1800 && timeToRise>-1800){
     colorIndexLow = map(timeToRise, -1800, 1800, 180, 0);
     colorIndexHigh = colorIndexLow+40;
-    sunBrightness = map(constrain(timeToRise,0,1800), 0, 1800, 200, 0);
+    sunBrightness = map(constrain(timeToRise,-600,1800), -600, 1800, 200, 0);
     skyBrightness = map(constrain(timeToRise,-1800,0), -1800, 0, MAX_SKY_BRIGHTNESS, 5);
   }
   else if(timeToSet<1800 && timeToSet>-1800){
     colorIndexLow = map(timeToSet, -1800, 1800, 0, 180);
     colorIndexHigh = colorIndexLow+40;
-    sunBrightness = map(constrain(timeToSet,-1800,0), -1800, 0, 0, 200);
+    sunBrightness = map(constrain(timeToSet,-1800,600), -1800, 600, 0, 200);
     skyBrightness = map(constrain(timeToSet,0,1800), 0, 1800, 5, MAX_SKY_BRIGHTNESS);
   }
   else if(timeToRise<-1800 && timeToSet>1800){
@@ -77,10 +77,6 @@ CRGBPalette16 paletteClass::getSunAndSkyPalette(int timeToRise, int timeToSet, u
   CRGB sunEdgeColor = ColorFromPalette(sunColorPalette_static, colorIndexLow, sunBrightness/4, NOBLEND);
   CRGB sunColor  = ColorFromPalette(sunColorPalette_static, colorIndexHigh, sunBrightness , NOBLEND);
   CRGB skyColor = ColorFromPalette(skyPalette.palette,cloudCoverage, skyPalette.brightness, NOBLEND);
-  /*if(!sunEdgeColor){
-    sunEdgeColor = skyColor;
-    sunColor = skyColor;
-  }*/
   sunAndSkyPalette = CRGBPalette16(
                                 skyColor, skyColor, skyColor, skyColor,
                                 skyColor, skyColor, skyColor, skyColor,
@@ -100,6 +96,14 @@ ledEffects::ledEffects(CRGB* ledArray){
     for(int i=0;i<SKYWIDTH;i++){
       dropArray[i]=CRGB::Black;
     }
+    for(int i=0; i<NUM_LEDS; i++){
+      thunderArray[i]=CRGB::Black;
+    }
+    errorPalette = CRGBPalette16(
+                                  CRGB::Black, CRGB::Red, CRGB::Black, CRGB::Red,
+                                  CRGB::Black, CRGB::Red, CRGB::Black, CRGB::Red,
+                                  CRGB::Black, CRGB::Red, CRGB::Black, CRGB::Red,
+                                  CRGB::Black, CRGB::Red, CRGB::Black, CRGB::Red);
 }
 
 void ledEffects::setData(CRGBPalette16 tempPalette, mappedDataS data){
@@ -148,6 +152,15 @@ void ledEffects::snowRainEffects(){
     chanceOfDrops = 30;
     dropColor = CRGB::White;
   }
+  else if(currentData.type==1){
+    //Thunder & rain
+    chanceOfDrops = 30;
+    dropColor = CRGB::Blue;
+    thunderEffect();
+  }
+  else{
+    chanceOfDrops = 0;
+  }
 
   if( random8(200) < chanceOfDrops) {
     dropArray[random16(0,SKYWIDTH) ] += dropColor;
@@ -163,6 +176,32 @@ void ledEffects::snowRainFade(){
   }
   for (int i=SKYLEDSTART; i<SKYLEDEND; i++){
     leds_p[i] += dropArray[i-SKYLEDSTART];
+  }
+}
+
+void ledEffects::thunderEffect(){
+  EVERY_N_SECONDS(2){
+    if(random8(200) < 15){
+      for (int i=0; i<NUM_LEDS; i++){
+        thunderArray[i] += CRGB::White;
+      }
+    }
+  }
+  EVERY_N_MILLISECONDS(30){
+    for(int i=0; i<NUM_LEDS;i++){
+      thunderArray[i].fadeToBlackBy(15);
+    }
+  }
+  for(int i=0; i<NUM_LEDS;i++){
+    leds_p[i] += thunderArray[i];
+  }
+}
+void ledEffects::errorMode(){
+  uint8_t colorIndex = beatsin8(2,0,64);
+  uint8_t localBrightness = beatsin8(6,0,255);
+  for(int i=0;i<NUM_LEDS;i++){
+    leds_p[i]=ColorFromPalette(errorPalette,colorIndex,localBrightness,LINEARBLEND);
+    colorIndex++;
   }
 }
 

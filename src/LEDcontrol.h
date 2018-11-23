@@ -45,18 +45,22 @@ class ledEffects{
     skyPaletteS skyColorsS;
     CRGBPalette16 currentTempPalette;
     CRGBPalette16 currentSunPalette;
+    CRGBPalette16 errorPalette;
     mappedDataS currentData;
     int chanceOfDrops = 0;
     CRGB dropColor = CRGB::White;
     CRGB dropArray[SKYWIDTH];
+    CRGB thunderArray[NUM_LEDS];
   public:
     ledEffects(CRGB*);
     void setData(CRGBPalette16, mappedDataS);
     void windShiftLeds();
     void snowRainEffects();
     void SkyAndSunEffects(CRGBPalette16, mappedDataS, skyPaletteS);
+    void errorMode();
   private:
     void snowRainFade();
+    void thunderEffect();
 };
 
 #endif
