@@ -7,8 +7,8 @@ FASTLED_USING_NAMESPACE;
 DEFINE_GRADIENT_PALETTE( temperature_heatmap ) {
 0,     0, 0, 255,   //Blue
 50,    25, 61, 255,   //Dark Slate Blue
-90,    25, 110, 212,   //Midnight Blue
-120,   0, 139, 180,   //Dark Cyan
+70,    25, 110, 212,   //Midnight Blue
+100,   0, 139, 180,   //Dark Cyan
 180,   200, 128, 148, //light Coral
 255,   255, 92, 92 }; //Indian Red
 
@@ -41,10 +41,10 @@ CRGBPalette16 paletteClass::getTempPalette(uint8_t temp){
   CRGB color2  = ColorFromPalette(temperaturePalette_static, colorIndexHigh,200 , NOBLEND);
   CRGB blackblue  = CRGB(0,0,80);//CRGB::Black;
   tempPalette = CRGBPalette16(
-                                color1,   color1,  color2, color2,
-                                color1, color2, color1,  blackblue,
-                                color2,  color2,  color1,  color1,
-                                color2, color1, color2,  blackblue );
+    color1, color2, color1,  blackblue,
+    color2,  color2,  blackblue,  blackblue,
+    color1, color1, blackblue,  blackblue,
+    color1,   color1,  color2, color2);
   return tempPalette;
 }
 
@@ -56,13 +56,13 @@ CRGBPalette16 paletteClass::getSunAndSkyPalette(int timeToRise, int timeToSet, u
   if(timeToRise<1800 && timeToRise>-1800){
     colorIndexLow = map(timeToRise, -1800, 1800, 180, 0);
     colorIndexHigh = colorIndexLow+40;
-    sunBrightness = map(constrain(timeToRise,-600,1800), -600, 1800, 200, 0);
+    sunBrightness = map(constrain(timeToRise,-900,1800), -900, 1800, 200, 0);
     skyBrightness = map(constrain(timeToRise,-1800,0), -1800, 0, MAX_SKY_BRIGHTNESS, 5);
   }
   else if(timeToSet<1800 && timeToSet>-1800){
     colorIndexLow = map(timeToSet, -1800, 1800, 0, 180);
     colorIndexHigh = colorIndexLow+40;
-    sunBrightness = map(constrain(timeToSet,-1800,600), -1800, 600, 0, 200);
+    sunBrightness = map(constrain(timeToSet,-1800,900), -1800, 900, 0, 200);
     skyBrightness = map(constrain(timeToSet,0,1800), 0, 1800, 5, MAX_SKY_BRIGHTNESS);
   }
   else if(timeToRise<-1800 && timeToSet>1800){
@@ -82,7 +82,6 @@ CRGBPalette16 paletteClass::getSunAndSkyPalette(int timeToRise, int timeToSet, u
                                 skyColor, skyColor, skyColor, skyColor,
                                 sunEdgeColor, sunColor, sunEdgeColor, skyColor,
                                 skyColor, skyColor, skyColor, skyColor);
-
   return sunAndSkyPalette;
 }
 
@@ -112,18 +111,18 @@ void ledEffects::setData(CRGBPalette16 tempPalette, mappedDataS data){
 }
 
 void ledEffects::windShiftLeds(){
-  uint8_t colorIndex = beatsin8((currentData.wind/14),0,120);
-  uint8_t tempIndex = colorIndex;
+  uint8_t colorIndex = beatsin16((currentData.wind/11),0,255);
+  uint8_t colorIndex2 = beatsin16((currentData.wind/15),0, 412);
   for( int i = (SKYLEDSTART-1); i >= 0; i--) {
-    leds_p[i] = ColorFromPalette( currentTempPalette, tempIndex, globalBrightness, LINEARBLEND);
-    tempIndex++;
+    leds_p[i] = ColorFromPalette( currentTempPalette, colorIndex, globalBrightness, LINEARBLEND);
+    colorIndex++;
   }
-  tempIndex = colorIndex;
   for(int j = SKYLEDEND; j < NUM_LEDS; j++) {
-    leds_p[j] = ColorFromPalette( currentTempPalette, tempIndex, globalBrightness, LINEARBLEND);
-    tempIndex++;
+    leds_p[j] = ColorFromPalette( currentTempPalette, colorIndex2, globalBrightness, LINEARBLEND);
+    colorIndex2--;
   }
 }
+
 
 void ledEffects::snowRainEffects(){
   if(currentData.type==2){
@@ -181,13 +180,28 @@ void ledEffects::snowRainFade(){
 
 void ledEffects::thunderEffect(){
   EVERY_N_SECONDS(2){
-    if(random8(200) < 15){
+    if(random8(200) < 10){
       for (int i=0; i<NUM_LEDS; i++){
         thunderArray[i] += CRGB::White;
+      }
+      if(random8(50) < 35){
+        thunderCrack = random8(100);
       }
     }
   }
   EVERY_N_MILLISECONDS(30){
+    if(thunderCrack>10){
+      thunderCrack = thunderCrack - 1;
+    }
+    else if(thunderCrack==10){
+      for (int i=SKYLEDSTART; i<SKYLEDEND; i++){
+        thunderArray[i] += CRGB::White;
+        thunderCrack = 0;
+      }
+    }
+    else{
+      thunderCrack = 0;
+    }
     for(int i=0; i<NUM_LEDS;i++){
       thunderArray[i].fadeToBlackBy(15);
     }

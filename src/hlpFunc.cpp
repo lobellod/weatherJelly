@@ -26,7 +26,7 @@ void dataToLedConverter::setLedConverterData(weatherDataS dataStruct){
 uint8_t dataToLedConverter::windConverter(int windspeed){
   uint8_t mappedWind;
   windspeed = constrain(windspeed, 0, 15);
-  mappedWind=map(windspeed, 0, 15, 0, 255);
+  mappedWind=map(windspeed, 0, 15, 15, 75 );
   return mappedWind;
 }
 uint8_t dataToLedConverter::tempConverter(int temperature){

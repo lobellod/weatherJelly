@@ -5,7 +5,7 @@ FASTLED_USING_NAMESPACE;
 #define LEDCONTROL_INCLUDED
 
 #define LED_PIN     1
-#define NUM_LEDS    144
+#define NUM_LEDS    140
 #define BRIGHTNESS  200
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
@@ -51,6 +51,7 @@ class ledEffects{
     CRGB dropColor = CRGB::White;
     CRGB dropArray[SKYWIDTH];
     CRGB thunderArray[NUM_LEDS];
+    int thunderCrack = 0;
   public:
     ledEffects(CRGB*);
     void setData(CRGBPalette16, mappedDataS);
