@@ -3,7 +3,7 @@
 #define DEBUG_H
 
 
-//#define DEBUG 2  //set to 1 for debug prints; 2 for custom string; undefine for normal
+ //#define DEBUG 2  //set to 1 for debug prints; 2 for custom string; undefine for normal
 #ifdef DEBUG
  #define DEBUG_BEGIN(...) Serial.begin(__VA_ARGS__)
  #define DEBUG_PRINTLN(...)  Serial.println(__VA_ARGS__)

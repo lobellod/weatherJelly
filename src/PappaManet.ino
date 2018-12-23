@@ -23,7 +23,7 @@ Timer stopTimer(msRetryTime, stopConnect);     // timer to stop a long running t
 //======================== Data Retrieving ===================================
 String weatherDataStr = String(100); //Strin for unparsed weather data
 
-const uint32_t msGetWeather = 60000*30; //Period for retrieving weather data (30mins)
+const uint32_t msGetWeather = 60000*20; //Period for retrieving weather data (20mins)
 bool getData = false;
 Timer getDataTimer(msGetWeather, toggleGetData);
 weatherDataS weatherData;
@@ -96,6 +96,8 @@ void weatherResponse(const char *event, const char *weatherDataStr){    //respon
     ledEffect.setData(tempPalette, LedControlData);
     resetTimeKeeper();
     dataReceived = true;
+    getData = false;
+    getDataTimer.reset();
 }
 //---------------------------------------------------------------------
 //==============================================================================
@@ -107,7 +109,11 @@ void setup() {
 
   DEBUG_BEGIN(9600);
   DEBUG_PRINTLN("Starting....");
-
+#ifdef DEBUG
+    Particle.variable("timeToRise", LedControlData.sunTime.timeToRise);
+    Particle.variable("timeToSet", LedControlData.sunTime.timeToSet);
+    Particle.variable("timeNow", LedControlData.sunTime.timeNow);
+#endif
 //==================General setups===============
     Particle.subscribe("hook-response/weather", weatherResponse, MY_DEVICES);
     getDataTimer.start();
@@ -133,7 +139,7 @@ delay(1000);
 #if DEBUG==2
     String testDataStr = String(100);
     //"weatherID ~ temp ~ wind ~ clouds ~ currentTime ~sunrise ~sunset"
-    testDataStr = "800~-5~10.6~76~1538716909~1538716909~1538719073~";
+    testDataStr = "312~0~6~0~1545426191~1545426791~1545436191~";
     weatherResponse("debug_event", testDataStr);
     DEBUG_PRINTLN("mapped data:");
     DEBUG_PRINTLN(LedControlData.type);
@@ -185,16 +191,16 @@ void loop() {
     if(Particle.connected()){
         if(getData){
           #if DEBUG < 2
+          EVERY_N_SECONDS(10){
             Particle.publish("weather", PRIVATE);
+            }
           #endif
           #if DEBUG == 2
-            String testDataStr = String(100);
+            //String testDataStr = String(100);
             //"weatherID ~ temp ~ wind ~ clouds ~ currentTime ~sunrise ~sunset"
             //testDataStr = "804~19.66~4.6~90~25010~10000~30000~";
-            weatherResponse("debug_event", testDataStr);
+            //weatherResponse("debug_event", testDataStr);
           #endif
-            getData = false;
-            getDataTimer.reset();
         }
         if(dataReceived){
           mappedData.timeForSunUpdate(tSec);

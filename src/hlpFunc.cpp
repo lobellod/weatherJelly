@@ -92,7 +92,8 @@ int dataToLedConverter::weatherIDconverter(int weatherID){
 }
 
 void dataToLedConverter::timeForSunUpdate(int timeAge){
-  mappedData.sunTime.timeNow = (unMappedData.currentTime + timeAge);
+//  mappedData.sunTime.timeNow = (unMappedData.currentTime + timeAge);
+  mappedData.sunTime.timeNow = Time.now();
   mappedData.sunTime.timeToRise = unMappedData.sunrise - mappedData.sunTime.timeNow;
   mappedData.sunTime.timeToSet = unMappedData.sunset - mappedData.sunTime.timeNow;
 }

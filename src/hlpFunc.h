@@ -14,9 +14,9 @@ struct weatherDataS{
 };
 
 struct sunTimesS{
-  int timeToRise;
-  int timeToSet;
-  int timeNow;
+  unsigned long timeToRise;
+  unsigned long timeToSet;
+  unsigned long timeNow;
 };
 
 struct mappedDataS{
